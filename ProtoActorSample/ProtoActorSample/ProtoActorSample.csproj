@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Proto.Actor" Version="0.1.11" />
+    <ProjectReference Include="..\ActorLib\ActorLib.csproj" />
   </ItemGroup>
 
 </Project>
