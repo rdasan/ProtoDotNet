@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using ActorLib;
+using System.Threading;
+using ActorLib.Actors;
+using ActorLib.Messages;
 using Proto;
 using Proto.Mailbox;
+using Counter = ActorLib.Messages.Counter;
 using Process = System.Diagnostics.Process;
 
 namespace ProtoActorSample
@@ -11,30 +15,78 @@ namespace ProtoActorSample
     {
         static void Main(string[] args)
         {
+			//Basic way of creating an actor - default
 	        Props propsCounterActor = Actor.FromProducer(() => new CounterActor());
 
+			//Creating an actor with specifics
 	        Props propsHelloActor = new Props()
 		        .WithProducer(() => new HelloActor())
 		        .WithDispatcher(new ThreadPoolDispatcher {Throughput = 3})
-		        .WithChildSupervisorStrategy(new OneForOneStrategy((who, reason) => SupervisorDirective.Restart, 2, TimeSpan.FromSeconds(2)))
+		        .WithChildSupervisorStrategy(new OneForOneStrategy((who, reason) => SupervisorDirective.Restart, 2,
+			        TimeSpan.FromSeconds(2)))
 		        .WithSpawner(Props.DefaultSpawner);
 
-	        PID pidCounter = Actor.Spawn(propsCounterActor);
-	        PID pidHelloActor = Actor.Spawn(propsHelloActor);
+	        PID counter = Actor.Spawn(propsCounterActor);
+	        PID helloActor = Actor.SpawnNamed(propsHelloActor, "Hello Actor 1");
 
-			Console.WriteLine("Start Sending Messages");
-	        for (int i = 1; i < 20; i++)
+			//Console.WriteLine("Start Sending Messages");
+	  //      for (int i = 1; i < 20; i++)
+	  //      {
+			//	Console.WriteLine($"Sending Message {i}");
+		 //       helloActor.Tell(new Hello {Who = $"Reji {i}"}); // Fire n forget
+			//	//Thread.Sleep(100);
+			//	counter.Tell(new Counter {Count = i});
+	  //      }
+
+			//Console.WriteLine("All messages sent. Main Thread Processing other stuff");
+			//Console.WriteLine("\n\n*****************************************\n\n");
+
+	        //Props superVisorProps = new Props()
+		       // .WithProducer(() => new SuperVisor())
+		       // .WithChildSupervisorStrategy(new OneForOneStrategy((who, exeption) => SupervisorDirective.Restart, 3,
+			      //  TimeSpan.FromSeconds(2)))
+		       // .WithMailbox(() => UnboundedMailbox.Create())
+		       // .WithSpawner(Props.DefaultSpawner);
+
+	        Props superVisorProps = Actor.FromProducer(() => new SuperVisor());
+
+	        PID superVisor = Actor.Spawn(superVisorProps);
+
+	        List<Account> accontsList = new List<Account>
 	        {
-				Console.WriteLine($"Sending Message {i}");
-		        pidHelloActor.Tell(new Hello {Who = $"Reji {i}"});
-				pidCounter.Tell(new Counter {Count = i});
+		        new Account
+		        {
+			        Contact = new Contact {FirstName = "Reji", LastName = "Dasan1"},
+			        CreditCard = new CreditCard {CCNumber = "4111111111111111", ExpDate = "09/2021"}
+		        },
+		        new Account
+		        {
+			        Contact = new Contact {FirstName = "Reji", LastName = "Dasan2"},
+			        CreditCard = new CreditCard {CCNumber = "4111111111111111", ExpDate = "09/2021"}
+		        },
+		        new Account
+		        {
+			        Contact = null,
+			        CreditCard = null
+		        },
+		        new Account
+		        {
+			        Contact = new Contact {FirstName = "Reji", LastName = "Dasan3"},
+			        CreditCard = new CreditCard {CCNumber = "4111111111111111", ExpDate = "09/2021"}
+		        },
+				new Account
+		        {
+			        Contact = new Contact {FirstName = "Reji", LastName = "Dasan4"},
+			        CreditCard = new CreditCard {CCNumber = "4111111111111111", ExpDate = "09/2021"}
+		        }
+			};
+
+	        foreach (var account in accontsList)
+	        {
+		        superVisor.Tell(account);
 	        }
 
-			Console.WriteLine("All messages sent");
-
-	        ProcessThreadCollection currentThreads = Process.GetCurrentProcess().Threads;
-
-	        Console.Read();
+			Console.Read();
         }
     }
 }

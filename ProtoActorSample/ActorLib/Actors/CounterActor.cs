@@ -3,19 +3,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using Proto;
 
-namespace ActorLib
+namespace ActorLib.Actors	
 {
-	public class HelloActor : IActor
+	public class CounterActor : IActor
 	{
 		public Task ReceiveAsync(IContext context)
 		{
 			var message = context.Message;
 
-			if (message is Hello helloMessage)
+			if (message is Messages.Counter counter)
 			{
-				
-				Console.WriteLine($"Hello - {helloMessage.Who}");
-				Thread.Sleep(200);
+				Console.WriteLine($"Message Recived by CounterActor No: {counter.Count}");
+				Thread.Sleep(100);
+
 			}
 
 			return Actor.Done;
