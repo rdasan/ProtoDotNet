@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using ActorLib.Messages;
 using Proto;
@@ -8,34 +9,35 @@ namespace ActorLib.Actors
 {
 	public class SuperVisor : IActor
 	{
-		private Props _contactProps;
+		//private Props _contactProps;
 		private Props _ccProps;
 		private Props _bankAccProps;
 
-		private PID _conactPid;
+		//private PID _conactPid;
 
 		public SuperVisor()
 		{
-			_contactProps = new Props()
-				.WithProducer(() => new ContactActor())
-				.WithChildSupervisorStrategy(new OneForOneStrategy((who, exeption) => SupervisorDirective.Stop, 3,
-					TimeSpan.FromSeconds(2)))
-				.WithMailbox(() => UnboundedMailbox.Create())
-				.WithSpawner(Props.DefaultSpawner);
 			_bankAccProps = Actor.FromProducer(() => new BankAccActor());
 			_ccProps = Actor.FromProducer(() => new CCActor());
-
-			_conactPid = Actor.Spawn(_contactProps);
 		}
 
 
 		public Task ReceiveAsync(IContext context)
 		{
 			var message = context.Message;
-
+			PID contactChild;
 			if (message is Account account)
 			{
-				_conactPid.Request(account, context.Self);
+				if (context.Children == null || context.Children.Count == 0)
+				{
+					contactChild = context.Spawn(Actor.FromProducer(() => new ContactActor()));
+				}
+				else
+				{
+					contactChild = context.Children.First();
+				}
+
+				contactChild.Request(account, context.Self);
 			}
 
 			return Actor.Done;
