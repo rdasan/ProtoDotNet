@@ -43,12 +43,10 @@ namespace ProtoActorSample
 
 			Props superVisorProps = new Props()
 				.WithProducer(() => new SuperVisor())
-				.WithChildSupervisorStrategy(new OneForOneStrategy((who, exeption) => SupervisorDirective.Stop, 3,
-					TimeSpan.FromSeconds(2)))
+				.WithChildSupervisorStrategy(
+					new OneForOneStrategy((who, exeption) => SupervisorDirective.Restart, 3, TimeSpan.FromSeconds(2)))
 				.WithMailbox(() => UnboundedMailbox.Create())
 				.WithSpawner(Props.DefaultSpawner);
-
-			//Props superVisorProps = Actor.FromProducer(() => new SuperVisor());
 
 			PID superVisor = Actor.Spawn(superVisorProps);
 
