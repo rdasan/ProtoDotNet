@@ -8,11 +8,13 @@ namespace ActorLib.Actors
 	public class ContactActor : IActor
 	{
 		private int _messageCounter;
+		
 
 
 		public ContactActor()
 		{
 			_messageCounter = 1;
+			
 		}
 
 		public Task ReceiveAsync(IContext context)
@@ -36,6 +38,7 @@ namespace ActorLib.Actors
 					{
 						Console.WriteLine($"Child Contact Reveived: {account.Contact.FirstName} {account.Contact.LastName}");
 						Console.WriteLine($"Message Counter : {_messageCounter++}");
+						context.Sender.Tell(new ChildDone{Message = $"Hey Supervisor. Account is processed for {account.Contact.FirstName} {account.Contact.LastName}" });
 					}
 					catch (Exception e)
 					{

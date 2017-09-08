@@ -22,21 +22,20 @@ namespace ProtoActorSample
 	        Props propsHelloActor = new Props()
 		        .WithProducer(() => new HelloActor())
 		        .WithDispatcher(new ThreadPoolDispatcher {Throughput = 3})
-		        .WithChildSupervisorStrategy(new OneForOneStrategy((who, reason) => SupervisorDirective.Restart, 2,
-			        TimeSpan.FromSeconds(2)))
 		        .WithSpawner(Props.DefaultSpawner);
+				
 
-	        PID counter = Actor.Spawn(propsCounterActor);
-	        PID helloActor = Actor.SpawnNamed(propsHelloActor, "Hello Actor 1");
+			PID counter = Actor.Spawn(propsCounterActor);
+			PID helloActor = Actor.SpawnNamed(propsHelloActor, "Hello Actor 1");
 
 			//Console.WriteLine("Start Sending Messages");
-			//      for (int i = 1; i < 20; i++)
-			//      {
+			//for (int i = 1; i < 20; i++)
+			//{
 			//	Console.WriteLine($"Sending Message {i}");
-			//       helloActor.Tell(new Hello {Who = $"Reji {i}"}); // Fire n forget
-			//	//Thread.Sleep(100);
-			//	counter.Tell(new Counter {Count = i});
-			//      }
+			//	helloActor.Tell(new Hello { Who = $"Reji {i}" }); // Fire n forget
+			//													  //Thread.Sleep(100);
+			//	counter.Tell(new Counter { Count = i });
+			//}
 
 			//Console.WriteLine("All messages sent. Main Thread Processing other stuff");
 			//Console.WriteLine("\n\n*****************************************\n\n");
@@ -44,7 +43,7 @@ namespace ProtoActorSample
 			Props superVisorProps = new Props()
 				.WithProducer(() => new SuperVisor())
 				.WithChildSupervisorStrategy(
-					new OneForOneStrategy((who, exeption) => SupervisorDirective.Restart, 3, TimeSpan.FromSeconds(2)))
+					new OneForOneStrategy((who, exeption) => SupervisorDirective.Stop, 3, TimeSpan.FromSeconds(2)))
 				.WithMailbox(() => UnboundedMailbox.Create())
 				.WithSpawner(Props.DefaultSpawner);
 
@@ -79,10 +78,14 @@ namespace ProtoActorSample
 		        }
 			};
 
-	        foreach (var account in accontsList)
-	        {
-		        superVisor.Tell(account);
-	        }
+			foreach (var account in accontsList)
+			{
+				superVisor.Tell(account);
+			}
+
+			PID ccActor = Actor.Spawn(Actor.FromProducer(() => new CCActor()));
+
+			//ccActor.Tell("Visa");
 
 			Console.Read();
         }

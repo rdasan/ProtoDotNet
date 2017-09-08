@@ -25,9 +25,9 @@ namespace ActorLib.Actors
 		public Task ReceiveAsync(IContext context)
 		{
 			var message = context.Message;
-			PID contactChild;
 			if (message is Account account)
 			{
+				PID contactChild;
 				if (context.Children == null || context.Children.Count == 0)
 				{
 					contactChild = context.Spawn(Actor.FromProducer(() => new ContactActor()));
@@ -38,6 +38,13 @@ namespace ActorLib.Actors
 				}
 
 				contactChild.Request(account, context.Self);
+
+			
+			}
+
+			if (message is ChildDone done)
+			{
+				Console.WriteLine($"Recived from Child : {done.Message}");
 			}
 
 			return Actor.Done;
